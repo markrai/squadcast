@@ -1,7 +1,7 @@
 ![image](https://github.com/user-attachments/assets/4022f1cd-185d-4c48-99d4-d3bc8f55b6a9)
 
 
-# SquadCast
+# SquadCast: Family Bulletin Board
 a family bulletin board system with instantaneous bi-directional updates, and a weather widget.
 
 # Prerequisites:
