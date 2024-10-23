@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Bulletin Board</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Quadrant 1: Person 1 -->
+<div class="quadrant">
+    <div class="font-buttons">
+        <button class="font-button increase-font" data-textarea="textarea-1">+</button>
+        <button class="font-button decrease-font" data-textarea="textarea-1">−</button>
+    </div>
+    <img src="{{ url_for('static', filename='person1.jpg') }}" class="person-image" alt="Person 1">
+    <textarea id="textarea-1" class="textarea"></textarea>
+</div>
+
+
+        <!-- Quadrant 2: Person 2 -->
+<div class="quadrant">
+    <div class="font-buttons">
+        <button class="font-button increase-font" data-textarea="textarea-2">+</button>
+        <button class="font-button decrease-font" data-textarea="textarea-2">−</button>
+    </div>
+    <img src="{{ url_for('static', filename='person2.jpg') }}" class="person-image" alt="Person 2">
+    <textarea id="textarea-2" class="textarea"></textarea>
+</div>
+
+
+        <!-- Quadrant 3: Person 3 -->
+        
+<div class="quadrant">
+    <div class="font-buttons">
+        <button class="font-button increase-font" data-textarea="textarea-3">+</button>
+        <button class="font-button decrease-font" data-textarea="textarea-3">−</button>
+    </div>
+    <img src="{{ url_for('static', filename='person3.jpg') }}" class="person-image" alt="Person 3">
+    <textarea id="textarea-3" class="textarea"></textarea>
+</div>
+
+
+<!-- Quadrant 4: General Dashboard (Weather Info) -->
+<div id="quadrant-4" class="quadrant">
+    <div id="weather-info">
+        <h2 id="city-name"></h2>
+        <p id="date-time"></p>
+        <div class="weather-main">
+            <img id="weather-icon" src="" alt="Weather Icon" />
+            <div class="weather-details">
+                <p id="temperature">Loading...</p>
+                <p id="weather-description">Loading...</p>
+            </div>
+        </div>
+        <div class="weather-extra">
+            <p id="humidity">Humidity: Loading...</p>
+            <p id="wind-speed">Wind Speed: Loading...</p>
+            <p id="uv-index">UV Index: Loading...</p>
+        </div>
+    </div>
+</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
