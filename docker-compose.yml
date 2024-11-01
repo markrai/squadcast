@@ -1,0 +1,6 @@
+services:
+  squadcast:
+    build: .
+    ports:
+      - "9091:9090"
+    container_name: squadcast
