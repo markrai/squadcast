@@ -1,0 +1,13 @@
+services:
+  squadcast:
+    build: .
+    ports:
+    volumes:
+      # to persist changes on the files in the container in a docker volume
+      # without affecting repo on host
+    # volumes:
+      # - squadcast_data:/app
+    container_name: squadcast
+
+volumes:
+  squadcast_data:
