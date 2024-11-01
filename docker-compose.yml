@@ -5,7 +5,8 @@ services:
     volumes:
       # to persist changes on the files in the container in a docker volume
       # without affecting repo on host
-      - squadcast_data:/app
+    # volumes:
+      # - squadcast_data:/app
     container_name: squadcast
 
 volumes:
