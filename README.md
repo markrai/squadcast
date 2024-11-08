@@ -1,4 +1,5 @@
-![image](https://github.com/user-attachments/assets/4022f1cd-185d-4c48-99d4-d3bc8f55b6a9)
+![004-squadcast](https://github.com/user-attachments/assets/879b6e27-70b1-4e0b-a96b-94a848c30f4a)
+
 
 
 # SquadCast: Family Bulletin Board
