@@ -7,6 +7,7 @@
     const inputEl = document.getElementById('input');
     const sendEl = document.getElementById('send');
     const presenceEl = document.getElementById('presence');
+    const roleAvatarEl = document.getElementById('roleAvatar');
     const fontUpEl = document.getElementById('fontUp');
     const fontDownEl = document.getElementById('fontDown');
     const themeToggleEl = document.getElementById('themeToggle');
@@ -130,10 +131,23 @@
         if (!p || p.room !== room) return;
         const elderOnline = (p.elder || 0) > 0;
         const caregiverOnline = (p.caregiver || 0) > 0;
+        let otherPartyOnline = false;
+        
         if (role === 'elder') {
             presenceEl.textContent = caregiverOnline ? 'Caregiver online' : 'Caregiver offline';
+            otherPartyOnline = caregiverOnline;
         } else {
             presenceEl.textContent = elderOnline ? 'Elder online' : 'Elder offline';
+            otherPartyOnline = elderOnline;
+        }
+        
+        // Update avatar border color based on online status
+        if (roleAvatarEl) {
+            if (otherPartyOnline) {
+                roleAvatarEl.classList.add('online');
+            } else {
+                roleAvatarEl.classList.remove('online');
+            }
         }
     }
 
@@ -186,12 +200,18 @@
 
     socket.on('connect', async () => {
         presenceEl.textContent = 'Connecting…';
+        if (roleAvatarEl) {
+            roleAvatarEl.classList.remove('online');
+        }
         socket.emit('join', { room, role });
         await loadHistory();
     });
 
     socket.on('disconnect', () => {
         presenceEl.textContent = 'Disconnected';
+        if (roleAvatarEl) {
+            roleAvatarEl.classList.remove('online');
+        }
     });
 
     socket.on('presence', setPresence);
@@ -199,6 +219,7 @@
     socket.on('joined', (data) => {
         if (!data || data.room !== room) return;
         presenceEl.textContent = 'Connected';
+        // Presence will be updated via the 'presence' event
     });
 
     socket.on('new_message', (message) => {

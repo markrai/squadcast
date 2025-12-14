@@ -183,6 +183,11 @@ body {
     object-fit: cover;
     border: 2px solid var(--border);
     display: block;
+    transition: border-color 0.3s ease;
+}
+
+.role-avatar.online {
+    border-color: #22c55e; /* Green color for online status */
 }
 
 .topbar-subtitle {
