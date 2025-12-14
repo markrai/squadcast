@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Two-person chat app for elder and caregiver">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SquadCast">
+    <title>{{ page_title }}</title>
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='squadcast.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="page-chat role-{{ role }}">
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-title">{{ "Elder" if role == "elder" else "Caregiver" }}</div>
+        </div>
+        <div class="topbar-right">
+            <div id="presence" class="presence" aria-live="polite"></div>
+            <div class="theme-controls" role="group" aria-label="Theme">
+                <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle light mode">☀</button>
+            </div>
+            <div class="font-controls" role="group" aria-label="Text size">
+                <button id="fontDown" class="icon-button" type="button" aria-label="Decrease text size">A−</button>
+                <button id="fontUp" class="icon-button" type="button" aria-label="Increase text size">A+</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="chat">
+        <ol id="messages" class="messages" aria-label="Messages"></ol>
+    </main>
+
+    <footer class="composer">
+        <label class="composer-field">
+            <span class="sr-only">Message</span>
+            <textarea id="input" class="composer-input" rows="2" placeholder="Type a message…"></textarea>
+        </label>
+        <button id="send" class="button button-primary composer-send" type="button">Send</button>
+    </footer>
+
+    <script>
+        window.SQUADCAST = {{ {"role": role}|tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='chat.js') }}"></script>
+    <script>
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
+

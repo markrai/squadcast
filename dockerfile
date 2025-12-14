@@ -9,4 +9,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 COPY . /app
 
+ENV PORT=9090
+EXPOSE 9090
+
 CMD [ "python", "app.py" ]

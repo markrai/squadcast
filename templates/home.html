@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Two-person chat app for elder and caregiver">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SquadCast">
+    <title>SquadCast Chat</title>
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='squadcast.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="page-home">
+    <header class="home-header">
+        <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle light mode">☀</button>
+    </header>
+    <main class="shell">
+        <h1 class="title">Chat</h1>
+        <p class="subtitle">Open one link on the elder's device, and the other on yours.</p>
+
+        <div class="buttons">
+            <a id="elderLink" class="button button-primary" href="/elder">Elder view</a>
+            <a id="caregiverLink" class="button" href="/caregiver">Caregiver view</a>
+        </div>
+
+        </main>
+
+    <script src="{{ url_for('static', filename='home.js') }}"></script>
+    <script>
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
+
