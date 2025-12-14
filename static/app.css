@@ -219,6 +219,9 @@ body {
     color: var(--fg);
     cursor: pointer;
     font-weight: 900;
+    touch-action: manipulation; /* Improves touch responsiveness on iOS */
+    -webkit-tap-highlight-color: transparent; /* Removes tap highlight on iOS */
+    user-select: none; /* Prevents text selection on touch */
 }
 
 .chat {

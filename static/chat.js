@@ -143,9 +143,31 @@
     const initialTheme = loadTheme();
     setTheme(initialTheme);
 
-    fontUpEl.addEventListener('click', () => setScale(loadScale() + 0.07));
-    fontDownEl.addEventListener('click', () => setScale(loadScale() - 0.07));
-    themeToggleEl.addEventListener('click', toggleTheme);
+    // Handle both click and touch events for iOS compatibility
+    function handleFontUp(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        setScale(loadScale() + 0.07);
+    }
+
+    function handleFontDown(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        setScale(loadScale() - 0.07);
+    }
+
+    function handleThemeToggle(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleTheme();
+    }
+
+    fontUpEl.addEventListener('click', handleFontUp);
+    fontUpEl.addEventListener('touchend', handleFontUp);
+    fontDownEl.addEventListener('click', handleFontDown);
+    fontDownEl.addEventListener('touchend', handleFontDown);
+    themeToggleEl.addEventListener('click', handleThemeToggle);
+    themeToggleEl.addEventListener('touchend', handleThemeToggle);
 
     sendEl.addEventListener('click', sendMessage);
     inputEl.addEventListener('keydown', (e) => {
