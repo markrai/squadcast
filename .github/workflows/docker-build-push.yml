@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Allows manual triggering
 
 env:
-  DOCKER_IMAGE: markrai/squadcast
+  DOCKER_IMAGE: markrai/hallo
   DOCKER_TAG: latest
 
 jobs:
