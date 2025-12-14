@@ -16,7 +16,9 @@
 <body class="page-chat role-{{ role }}">
     <header class="topbar">
         <div class="topbar-left">
-            <div class="topbar-title">{{ "Elder" if role == "elder" else "Caregiver" }}</div>
+            <img src="{{ url_for('static', filename='elder.jpg' if role == 'elder' else 'son.jpg') }}" 
+                 alt="{{ 'Elder' if role == 'elder' else 'Caregiver' }}" 
+                 class="role-avatar">
         </div>
         <div class="topbar-right">
             <div id="presence" class="presence" aria-live="polite"></div>

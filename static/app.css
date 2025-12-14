@@ -176,9 +176,13 @@ body {
     backdrop-filter: blur(10px);
 }
 
-.topbar-title {
-    font-weight: 800;
-    font-size: 1.1rem;
+.role-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+    display: block;
 }
 
 .topbar-subtitle {
