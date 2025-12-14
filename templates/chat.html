@@ -16,8 +16,8 @@
 <body class="page-chat role-{{ role }}">
     <header class="topbar">
         <div class="topbar-left">
-            <img src="{{ url_for('static', filename='elder.jpg' if role == 'elder' else 'son.jpg') }}" 
-                 alt="{{ 'Elder' if role == 'elder' else 'Caregiver' }}" 
+            <img src="{{ url_for('static', filename='son.jpg' if role == 'elder' else 'elder.jpg') }}" 
+                 alt="{{ 'Caregiver' if role == 'elder' else 'Elder' }}" 
                  class="role-avatar">
         </div>
         <div class="topbar-right">
