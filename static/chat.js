@@ -11,8 +11,18 @@
     const fontUpEl = document.getElementById('fontUp');
     const fontDownEl = document.getElementById('fontDown');
     const themeToggleEl = document.getElementById('themeToggle');
+    const settingsButtonEl = document.getElementById('settingsButton');
+    const settingsModalEl = document.getElementById('settingsModal');
+    const closeModalEl = document.getElementById('closeModal');
+    const saveSettingsEl = document.getElementById('saveSettings');
+    const cancelSettingsEl = document.getElementById('cancelSettings');
+    const elderNameInputEl = document.getElementById('elderNameInput');
+    const caregiverNameInputEl = document.getElementById('caregiverNameInput');
 
     let socket = null;
+    
+    // Custom names storage
+    const namesKey = 'squadcast:customNames';
 
     const fontKey = `squadcast:fontScale:${role}`;
     const defaultScale = role === 'elder' ? 1.25 : 1.0;
@@ -66,6 +76,80 @@
         setTheme(!isLight);
     }
 
+    // Custom names functions
+    function loadCustomNames() {
+        try {
+            const saved = localStorage.getItem(namesKey);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (_) {}
+        return { elder: 'Elder', caregiver: 'Caregiver' };
+    }
+
+    function saveCustomNames(names) {
+        try {
+            localStorage.setItem(namesKey, JSON.stringify(names));
+        } catch (_) {}
+    }
+
+    function getDisplayName(roleName) {
+        const names = loadCustomNames();
+        return names[roleName] || (roleName === 'elder' ? 'Elder' : 'Caregiver');
+    }
+
+    // Modal functions
+    function openSettingsModal() {
+        if (!settingsModalEl) return;
+        const names = loadCustomNames();
+        if (elderNameInputEl) elderNameInputEl.value = names.elder || 'Elder';
+        if (caregiverNameInputEl) caregiverNameInputEl.value = names.caregiver || 'Caregiver';
+        settingsModalEl.style.display = 'flex';
+    }
+
+    function closeSettingsModal() {
+        if (!settingsModalEl) return;
+        settingsModalEl.style.display = 'none';
+    }
+
+    function saveSettings() {
+        if (!elderNameInputEl || !caregiverNameInputEl) return;
+        const elderName = (elderNameInputEl.value || '').trim() || 'Elder';
+        const caregiverName = (caregiverNameInputEl.value || '').trim() || 'Caregiver';
+        
+        saveCustomNames({ elder: elderName, caregiver: caregiverName });
+        closeSettingsModal();
+        
+        // Update presence text with new names
+        if (socket && socket.connected) {
+            socket.emit('ping'); // This will trigger a presence update
+        }
+        
+        // Re-render all messages with new names
+        const currentMessages = Array.from(messagesEl.children);
+        currentMessages.forEach(item => {
+            const meta = item.querySelector('.meta');
+            if (meta) {
+                const text = meta.textContent;
+                const parts = text.split(' · ');
+                if (parts.length === 2) {
+                    const senderPart = parts[0];
+                    const timePart = parts[1];
+                    // Update if it's a role name (not "You")
+                    if (senderPart === 'Elder') {
+                        meta.textContent = `${getDisplayName('elder')} · ${timePart}`;
+                    } else if (senderPart === 'Caregiver') {
+                        meta.textContent = `${getDisplayName('caregiver')} · ${timePart}`;
+                    }
+                } else if (text === 'Elder') {
+                    meta.textContent = getDisplayName('elder');
+                } else if (text === 'Caregiver') {
+                    meta.textContent = getDisplayName('caregiver');
+                }
+            }
+        });
+    }
+
     function formatTime(iso) {
         try {
             const date = new Date(iso);
@@ -99,7 +183,7 @@
 
         const meta = document.createElement('div');
         meta.className = 'meta';
-        const senderLabel = mine ? 'You' : (message.role === 'elder' ? 'Elder' : 'Caregiver');
+        const senderLabel = mine ? 'You' : getDisplayName(message.role);
         const timeLabel = message.ts ? formatTime(message.ts) : '';
         meta.textContent = timeLabel ? `${senderLabel} · ${timeLabel}` : senderLabel;
 
@@ -134,10 +218,12 @@
         let otherPartyOnline = false;
         
         if (role === 'elder') {
-            presenceEl.textContent = caregiverOnline ? 'Caregiver online' : 'Caregiver offline';
+            const caregiverName = getDisplayName('caregiver');
+            presenceEl.textContent = caregiverOnline ? `${caregiverName} online` : `${caregiverName} offline`;
             otherPartyOnline = caregiverOnline;
         } else {
-            presenceEl.textContent = elderOnline ? 'Elder online' : 'Elder offline';
+            const elderName = getDisplayName('elder');
+            presenceEl.textContent = elderOnline ? `${elderName} online` : `${elderName} offline`;
             otherPartyOnline = elderOnline;
         }
         
@@ -182,6 +268,48 @@
     fontDownEl.addEventListener('touchend', handleFontDown);
     themeToggleEl.addEventListener('click', handleThemeToggle);
     themeToggleEl.addEventListener('touchend', handleThemeToggle);
+
+    // Settings modal handlers (caregiver only)
+    if (settingsButtonEl) {
+        settingsButtonEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openSettingsModal();
+        });
+        settingsButtonEl.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openSettingsModal();
+        });
+    }
+    if (closeModalEl) {
+        closeModalEl.addEventListener('click', closeSettingsModal);
+        closeModalEl.addEventListener('touchend', closeSettingsModal);
+    }
+    if (cancelSettingsEl) {
+        cancelSettingsEl.addEventListener('click', closeSettingsModal);
+        cancelSettingsEl.addEventListener('touchend', closeSettingsModal);
+    }
+    if (saveSettingsEl) {
+        saveSettingsEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            saveSettings();
+        });
+        saveSettingsEl.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            saveSettings();
+        });
+    }
+    // Close modal when clicking outside
+    if (settingsModalEl) {
+        settingsModalEl.addEventListener('click', (e) => {
+            if (e.target === settingsModalEl) {
+                closeSettingsModal();
+            }
+        });
+    }
 
     sendEl.addEventListener('click', sendMessage);
     inputEl.addEventListener('keydown', (e) => {

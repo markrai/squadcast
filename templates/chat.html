@@ -29,8 +29,39 @@
                 <button id="fontDown" class="icon-button" type="button" aria-label="Decrease text size">A−</button>
                 <button id="fontUp" class="icon-button" type="button" aria-label="Increase text size">A+</button>
             </div>
+            {% if role == 'caregiver' %}
+            <div class="settings-controls" role="group" aria-label="Settings">
+                <button id="settingsButton" class="icon-button" type="button" aria-label="Settings">⚙</button>
+            </div>
+            {% endif %}
         </div>
     </header>
+
+    <!-- Settings Modal (Caregiver only) -->
+    {% if role == 'caregiver' %}
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button id="closeModal" class="icon-button" type="button" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <label class="field">
+                    <span class="field-label">Elder Name</span>
+                    <input id="elderNameInput" class="field-input" type="text" placeholder="Elder" autocomplete="off">
+                </label>
+                <label class="field">
+                    <span class="field-label">Caregiver Name</span>
+                    <input id="caregiverNameInput" class="field-input" type="text" placeholder="Caregiver" autocomplete="off">
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettings" class="button button-primary" type="button">Save</button>
+                <button id="cancelSettings" class="button" type="button">Cancel</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <main class="chat">
         <ol id="messages" class="messages" aria-label="Messages"></ol>
