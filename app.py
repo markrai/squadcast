@@ -55,6 +55,10 @@ def _chat_path(room: str) -> str:
     return os.path.join(DATA_DIR, f"chat_{room}.jsonl")
 
 
+def _names_path(room: str) -> str:
+    return os.path.join(DATA_DIR, f"names_{room}.json")
+
+
 def _room_lock(room: str) -> threading.Lock:
     with _room_locks_lock:
         lock = _room_locks.get(room)
@@ -93,6 +97,23 @@ def _load_messages(room: str, limit: int = 200) -> List[Dict]:
         except json.JSONDecodeError:
             continue
     return messages
+
+
+def _load_names(room: str) -> Dict[str, str]:
+    path = _names_path(room)
+    try:
+        with _room_lock(room):
+            with open(path, "r", encoding="utf-8") as file:
+                return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {"elder": "Elder", "caregiver": "Caregiver"}
+
+
+def _save_names(room: str, names: Dict[str, str]) -> None:
+    path = _names_path(room)
+    with _room_lock(room):
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(names, file, ensure_ascii=False, indent=2)
 
 
 def _broadcast_presence(room: str) -> None:
@@ -136,6 +157,25 @@ def api_messages():
 @app.route("/api/health", methods=["GET"])
 def api_health():
     return jsonify({"ok": True})
+
+
+@app.route("/api/names", methods=["GET"])
+def api_names():
+    room = _safe_room(request.args.get("room"))
+    return jsonify({"room": room, "names": _load_names(room)})
+
+
+@app.route("/api/names", methods=["POST"])
+def api_set_names():
+    room = _safe_room(request.args.get("room"))
+    data = request.get_json() or {}
+    elder = (data.get("elder") or "").strip() or "Elder"
+    caregiver = (data.get("caregiver") or "").strip() or "Caregiver"
+    names = {"elder": elder, "caregiver": caregiver}
+    _save_names(room, names)
+    # Broadcast name update to all clients in the room
+    socketio.emit("names_updated", {"room": room, "names": names}, to=room)
+    return jsonify({"room": room, "names": names})
 
 
 @app.route("/static/<path:filename>")

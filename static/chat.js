@@ -21,8 +21,9 @@
 
     let socket = null;
     
-    // Custom names storage
+    // Custom names storage (server-side, with localStorage fallback)
     const namesKey = 'squadcast:customNames';
+    let customNames = { elder: 'Elder', caregiver: 'Caregiver' };
 
     const fontKey = `squadcast:fontScale:${role}`;
     const defaultScale = role === 'elder' ? 1.25 : 1.0;
@@ -77,57 +78,70 @@
     }
 
     // Custom names functions
-    function loadCustomNames() {
+    async function loadCustomNames() {
+        try {
+            const res = await fetch(`/api/names?room=${encodeURIComponent(room)}`, { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.names) {
+                    customNames = data.names;
+                    // Also save to localStorage as backup
+                    try {
+                        localStorage.setItem(namesKey, JSON.stringify(customNames));
+                    } catch (_) {}
+                    return customNames;
+                }
+            }
+        } catch (_) {}
+        // Fallback to localStorage if server fails
         try {
             const saved = localStorage.getItem(namesKey);
             if (saved) {
-                return JSON.parse(saved);
+                customNames = JSON.parse(saved);
+                return customNames;
             }
         } catch (_) {}
         return { elder: 'Elder', caregiver: 'Caregiver' };
     }
 
-    function saveCustomNames(names) {
+    async function saveCustomNames(names) {
+        customNames = names;
+        // Save to localStorage as backup
         try {
             localStorage.setItem(namesKey, JSON.stringify(names));
         } catch (_) {}
+        
+        // Save to server (caregiver only)
+        if (role === 'caregiver') {
+            try {
+                const res = await fetch(`/api/names?room=${encodeURIComponent(room)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(names)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.names) {
+                        customNames = data.names;
+                    }
+                }
+            } catch (_) {}
+        }
     }
 
     function getDisplayName(roleName) {
-        const names = loadCustomNames();
-        return names[roleName] || (roleName === 'elder' ? 'Elder' : 'Caregiver');
+        return customNames[roleName] || (roleName === 'elder' ? 'Elder' : 'Caregiver');
     }
 
-    // Modal functions
-    function openSettingsModal() {
-        if (!settingsModalEl) return;
-        const names = loadCustomNames();
-        if (elderNameInputEl) elderNameInputEl.value = names.elder || 'Elder';
-        if (caregiverNameInputEl) caregiverNameInputEl.value = names.caregiver || 'Caregiver';
-        settingsModalEl.style.display = 'flex';
-    }
-
-    function closeSettingsModal() {
-        if (!settingsModalEl) return;
-        settingsModalEl.style.display = 'none';
-    }
-
-    function saveSettings() {
-        if (!elderNameInputEl || !caregiverNameInputEl) return;
-        const elderName = (elderNameInputEl.value || '').trim() || 'Elder';
-        const caregiverName = (caregiverNameInputEl.value || '').trim() || 'Caregiver';
-        
-        saveCustomNames({ elder: elderName, caregiver: caregiverName });
-        closeSettingsModal();
-        
-        // Update presence text with new names
+    function updateAllDisplayedNames() {
+        // Update presence text
         if (socket && socket.connected) {
-            socket.emit('ping'); // This will trigger a presence update
+            socket.emit('ping'); // Trigger presence update
         }
         
-        // Re-render all messages with new names
-        const currentMessages = Array.from(messagesEl.children);
-        currentMessages.forEach(item => {
+        // Update all message metadata
+        const messageItems = messagesEl.querySelectorAll('.message');
+        messageItems.forEach(item => {
             const meta = item.querySelector('.meta');
             if (meta) {
                 const text = meta.textContent;
@@ -135,7 +149,6 @@
                 if (parts.length === 2) {
                     const senderPart = parts[0];
                     const timePart = parts[1];
-                    // Update if it's a role name (not "You")
                     if (senderPart === 'Elder') {
                         meta.textContent = `${getDisplayName('elder')} · ${timePart}`;
                     } else if (senderPart === 'Caregiver') {
@@ -148,6 +161,30 @@
                 }
             }
         });
+    }
+
+    // Modal functions
+    async function openSettingsModal() {
+        if (!settingsModalEl) return;
+        const names = await loadCustomNames();
+        if (elderNameInputEl) elderNameInputEl.value = names.elder || 'Elder';
+        if (caregiverNameInputEl) caregiverNameInputEl.value = names.caregiver || 'Caregiver';
+        settingsModalEl.style.display = 'flex';
+    }
+
+    function closeSettingsModal() {
+        if (!settingsModalEl) return;
+        settingsModalEl.style.display = 'none';
+    }
+
+    async function saveSettings() {
+        if (!elderNameInputEl || !caregiverNameInputEl) return;
+        const elderName = (elderNameInputEl.value || '').trim() || 'Elder';
+        const caregiverName = (caregiverNameInputEl.value || '').trim() || 'Caregiver';
+        
+        await saveCustomNames({ elder: elderName, caregiver: caregiverName });
+        closeSettingsModal();
+        updateAllDisplayedNames();
     }
 
     function formatTime(iso) {
@@ -319,6 +356,11 @@
         }
     });
 
+    // Load names initially (before socket connection)
+    loadCustomNames().then(() => {
+        // Names loaded, will be used when rendering
+    });
+
     if (typeof io !== 'function') {
         presenceEl.textContent = 'Offline (socket.io missing)';
         return;
@@ -331,6 +373,8 @@
         if (roleAvatarEl) {
             roleAvatarEl.classList.remove('online');
         }
+        // Load custom names from server
+        await loadCustomNames();
         socket.emit('join', { room, role });
         await loadHistory();
     });
@@ -355,6 +399,16 @@
         const shouldScroll = isNearBottom();
         renderMessage(message);
         if (shouldScroll) scrollToBottom();
+    });
+
+    socket.on('names_updated', (data) => {
+        if (!data || data.room !== room || !data.names) return;
+        customNames = data.names;
+        // Update localStorage as backup
+        try {
+            localStorage.setItem(namesKey, JSON.stringify(customNames));
+        } catch (_) {}
+        updateAllDisplayedNames();
     });
 
     setInterval(() => {
