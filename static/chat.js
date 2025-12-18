@@ -38,7 +38,8 @@
     }
 
     function setScale(scale) {
-        const next = clamp(scale, 0.85, 1.8);
+        // Allow a much larger maximum scale for accessibility (especially on elder view)
+        const next = clamp(scale, 0.85, 2.4);
         document.documentElement.style.setProperty('--scale', String(next));
         try { localStorage.setItem(fontKey, String(next)); } catch (_) {}
     }

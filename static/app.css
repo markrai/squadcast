@@ -160,9 +160,8 @@ body {
     flex-direction: column;
 }
 
-.page-chat.role-elder {
-    --scale: 1.25;
-}
+/* Elder view uses a larger default scale via JavaScript (defaultScale), */
+/* so we don't override --scale in CSS to keep the font controls working. */
 
 .topbar {
     position: sticky;
