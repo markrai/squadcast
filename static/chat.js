@@ -18,12 +18,16 @@
     const cancelSettingsEl = document.getElementById('cancelSettings');
     const elderNameInputEl = document.getElementById('elderNameInput');
     const caregiverNameInputEl = document.getElementById('caregiverNameInput');
+    const settingsTitleEl = document.getElementById('settingsTitle');
+    const secretRoleEl = document.getElementById('secretRole');
+    const roleToggleEl = document.getElementById('roleToggle');
 
     let socket = null;
     
     // Custom names storage (server-side, with localStorage fallback)
     const namesKey = 'squadcast:customNames';
     let customNames = { elder: 'Elder', caregiver: 'Caregiver' };
+    let settingsTitleTapCount = 0;
 
     const fontKey = `squadcast:fontScale:${role}`;
     const defaultScale = role === 'elder' ? 1.25 : 1.0;
@@ -163,6 +167,30 @@
         });
     }
 
+    // Secret role helpers
+    function updateRoleToggleLabel() {
+        if (!roleToggleEl) return;
+        if (role === 'elder') {
+            roleToggleEl.textContent = 'Current role: Elder (tap to switch to Caregiver)';
+        } else {
+            roleToggleEl.textContent = 'Current role: Caregiver (tap to switch to Elder)';
+        }
+    }
+
+    function showSecretRoleToggle() {
+        if (!secretRoleEl) return;
+        console.log('Secret role menu revealed');
+        secretRoleEl.style.display = 'block';
+        updateRoleToggleLabel();
+    }
+
+    function resetSecretRoleToggle() {
+        settingsTitleTapCount = 0;
+        if (secretRoleEl) {
+            secretRoleEl.style.display = 'none';
+        }
+    }
+
     // Modal functions
     async function openSettingsModal() {
         if (!settingsModalEl) return;
@@ -175,6 +203,7 @@
     function closeSettingsModal() {
         if (!settingsModalEl) return;
         settingsModalEl.style.display = 'none';
+        resetSecretRoleToggle();
     }
 
     async function saveSettings() {
@@ -346,6 +375,59 @@
                 closeSettingsModal();
             }
         });
+    }
+
+    // Secret settings title taps (caregiver only)
+    if (settingsTitleEl && role === 'caregiver') {
+        const handleTitleTap = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            settingsTitleTapCount += 1;
+            console.log('Settings heading tapped', settingsTitleTapCount, 'times');
+            if (settingsTitleTapCount >= 10) {
+                showSecretRoleToggle();
+            }
+        };
+        settingsTitleEl.addEventListener('click', handleTitleTap);
+        settingsTitleEl.addEventListener('touchend', handleTitleTap);
+    }
+
+    // Secret role toggle (caregiver only)
+    if (roleToggleEl && role === 'caregiver') {
+        const handleRoleToggle = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Switch views based on current role
+            if (role === 'caregiver') {
+                window.location.href = '/elder';
+            } else {
+                window.location.href = '/caregiver';
+            }
+        };
+        roleToggleEl.addEventListener('click', handleRoleToggle);
+        roleToggleEl.addEventListener('touchend', handleRoleToggle);
+    }
+
+    // Keep latest messages visible when keyboard opens
+    if (inputEl) {
+        inputEl.addEventListener('focus', () => {
+            setTimeout(scrollToBottom, 100);
+        });
+    }
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('resize', () => {
+            if (document.activeElement === inputEl) {
+                setTimeout(scrollToBottom, 100);
+            }
+        });
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                if (document.activeElement === inputEl) {
+                    setTimeout(scrollToBottom, 100);
+                }
+            });
+        }
     }
 
     sendEl.addEventListener('click', sendMessage);

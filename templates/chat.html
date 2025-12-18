@@ -42,7 +42,7 @@
     <div id="settingsModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Settings</h2>
+                <h2 id="settingsTitle">Settings</h2>
                 <button id="closeModal" class="icon-button" type="button" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
@@ -54,6 +54,16 @@
                     <span class="field-label">Caregiver Name</span>
                     <input id="caregiverNameInput" class="field-input" type="text" placeholder="Caregiver" autocomplete="off">
                 </label>
+
+                <!-- Secret role toggle (initially hidden) -->
+                <div id="secretRole" class="secret-role" style="display: none;">
+                    <label class="field">
+                        <span class="field-label">Role</span>
+                        <button id="roleToggle" class="button" type="button">
+                            <!-- Filled by JavaScript -->
+                        </button>
+                    </label>
+                </div>
             </div>
             <div class="modal-footer">
                 <button id="saveSettings" class="button button-primary" type="button">Save</button>
