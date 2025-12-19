@@ -254,6 +254,16 @@
         const timeLabel = message.ts ? formatTime(message.ts) : '';
         meta.textContent = timeLabel ? `${senderLabel} · ${timeLabel}` : senderLabel;
 
+        // Add a WhatsApp-style tick for messages sent by this client
+        if (mine && message.id) {
+            const tick = document.createElement('span');
+            tick.className = 'meta-tick meta-tick-pending';
+            tick.dataset.messageId = message.id;
+            tick.textContent = '✓';
+            meta.appendChild(document.createTextNode(' '));
+            meta.appendChild(tick);
+        }
+
         item.appendChild(bubble);
         item.appendChild(meta);
         messagesEl.appendChild(item);
@@ -265,7 +275,17 @@
         const data = await res.json();
         const list = Array.isArray(data.messages) ? data.messages : [];
         messagesEl.innerHTML = '';
-        for (const message of list) renderMessage(message);
+        for (const message of list) {
+            renderMessage(message);
+        }
+        // Mark all messages from the other party as seen
+        if (socket) {
+            for (const message of list) {
+                if (message.role !== role && message.id) {
+                    socket.emit('message_seen', { room, role, id: message.id });
+                }
+            }
+        }
         scrollToBottom();
     }
 
@@ -482,6 +502,10 @@
         const shouldScroll = isNearBottom();
         renderMessage(message);
         if (shouldScroll) scrollToBottom();
+        // Mark new incoming messages as seen
+        if (message.role !== role && message.id) {
+            socket.emit('message_seen', { room, role, id: message.id });
+        }
     });
 
     socket.on('names_updated', (data) => {
@@ -492,6 +516,17 @@
             localStorage.setItem(namesKey, JSON.stringify(customNames));
         } catch (_) {}
         updateAllDisplayedNames();
+    });
+
+    socket.on('message_seen', (data) => {
+        if (!data || data.room !== room || !data.id) return;
+        // Only care when the *other* role reports seeing a message
+        if (data.role === role) return;
+        const tick = document.querySelector(`.meta-tick[data-message-id="${data.id}"]`);
+        if (tick) {
+            tick.classList.remove('meta-tick-pending');
+            tick.classList.add('meta-tick-seen');
+        }
     });
 
     setInterval(() => {

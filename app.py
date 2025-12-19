@@ -257,6 +257,24 @@ def handle_disconnect():
     _broadcast_presence(room)
 
 
+@socketio.on("message_seen")
+def handle_message_seen(data):
+    data = data or {}
+    room = _safe_room(data.get("room"))
+    role = _safe_role(data.get("role"))
+    msg_id = (data.get("id") or "").strip()
+
+    if not msg_id:
+        return
+
+    # Broadcast to everyone in the room that this message was seen by this role.
+    socketio.emit(
+        "message_seen",
+        {"room": room, "role": role, "id": msg_id},
+        to=room,
+    )
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "9090"))
     socketio.run(app, host="0.0.0.0", allow_unsafe_werkzeug=True, port=port, use_reloader=False)

@@ -285,6 +285,19 @@ body {
     color: var(--muted);
 }
 
+.meta-tick {
+    margin-left: 4px;
+    font-size: 0.9em;
+}
+
+.meta-tick-pending {
+    color: var(--muted);
+}
+
+.meta-tick-seen {
+    color: #22c55e;
+}
+
 .composer {
     position: sticky;
     bottom: 0;
